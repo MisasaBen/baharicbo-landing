@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -175,7 +176,7 @@ export default function LandingPage() {
       </a>
 
       {/* Top bar */}
-      <div className="bg-blue-900 text-white">
+      <div className="bg-[var(--bahari-blue-deep)] text-white">
         <div className="max-w-7xl mx-auto px-4 py-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm">
           <div className="flex items-center gap-2">
             <ShieldCheck size={16} className="opacity-90" />
@@ -204,12 +205,23 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b">
         <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-2xl bg-blue-700 text-white grid place-items-center font-bold">
-              B
+            <div className="relative h-11 w-11 overflow-hidden rounded-full border border-slate-200 bg-white shadow-sm">
+              <Image
+                src="/logo-icon.png"
+                alt="Bahari CBO Network logo"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
+
             <div className="leading-tight">
-              <div className="text-lg font-bold text-blue-800">Bahari CBO Network</div>
-              <div className="text-xs text-gray-500">Blue Empowerment (BE) • IMTA Monitoring</div>
+              <div className="text-lg font-bold text-[var(--bahari-blue)]">
+                Bahari CBO Network
+              </div>
+              <div className="text-xs text-gray-500">
+                Blue Empowerment (BE) • IMTA Monitoring
+              </div>
             </div>
           </div>
 
@@ -266,7 +278,7 @@ export default function LandingPage() {
               <Pill tone="muted" icon={<BarChart3 size={14} />} text="Data-driven aquaculture" />
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-extrabold text-blue-900 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-extrabold text-[var(--bahari-blue)] leading-tight">
               Smart Aquaculture. Sustainable Oceans.
             </h1>
             <p className="mt-6 text-lg text-gray-600 max-w-3xl mx-auto">
@@ -322,10 +334,12 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            <div className="bg-gradient-to-br from-blue-100 to-teal-100 rounded-3xl h-72 md:h-80 flex flex-col items-center justify-center text-blue-900 font-semibold border">
-              <div className="text-sm opacity-70">Media placeholder</div>
-              <div className="text-lg mt-2">Coastal IMTA Cage / Seaweed</div>
-              <div className="text-xs mt-2 opacity-70">Replace with approved project photos later</div>
+            <div className="rounded-3xl h-72 md:h-80 border overflow-hidden bg-gradient-to-br from-[var(--bahari-sea)] to-[var(--bahari-green-soft)] flex flex-col items-center justify-center text-[var(--bahari-blue)] font-semibold">
+              <div className="text-sm opacity-70">Approved project imagery</div>
+              <div className="text-lg mt-2">IMTA Cage / Seaweed Farming / Community Activity</div>
+              <div className="text-xs mt-2 opacity-70 px-6 text-center">
+                Client-provided images will be inserted here after final approval
+              </div>
             </div>
           </div>
         </section>
@@ -631,13 +645,22 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="bg-blue-950 text-white py-10">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-6 items-start">
-          <div className="space-y-2">
-            <div className="font-bold text-lg">Bahari CBO Network</div>
+          <div className="space-y-3">
+            <div className="relative h-16 w-56">
+              <Image
+                src="/logo-full.jpeg"
+                alt="Bahari CBO Network full logo"
+                fill
+                className="object-contain object-left"
+              />
+            </div>
+
             <div className="text-sm text-white/80">
               Blue Empowerment (BE) Project • IMTA Monitoring
             </div>
+
             <div className="text-xs text-white/70">
-              Community-owned data • Privacy-first • Built for low-bandwidth access
+              Bahari Yetu Maisha Yetu • Community-owned data • Privacy-first • Built for low-bandwidth access
             </div>
           </div>
 

@@ -124,3 +124,27 @@
     @apply bg-background text-foreground;
   }
 }
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+section[id] {
+  scroll-margin-top: 96px;
+}
+
+:root {
+  --bahari-blue: #0f3d63;
+  --bahari-blue-deep: #0a2d49;
+  --bahari-sea: #dff3f4;
+  --bahari-green: #2f7a4d;
+  --bahari-green-soft: #e9f7ef;
+  --bahari-gold: #d7a928;
+  --bahari-sand: #f8faf7;
+}

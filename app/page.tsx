@@ -120,6 +120,15 @@ const API_BASE =
 
 async function fetchPublicStats(): Promise<PublicStats> {
   try {
+
+    console.log("[Landing] API_BASE =", API_BASE);
+
+    const statsUrl = `${API_BASE}/readings/public-stats`;
+    const healthUrl = `${API_BASE}/health`;
+
+    console.log("[Landing] Fetching stats from:", statsUrl);
+    console.log("[Landing] Fetching health from:", healthUrl);
+
     const [statsRes, healthRes] = await Promise.all([
       fetch(`${API_BASE}/readings/public-stats`, { cache: "no-store" }),
       fetch(`${API_BASE}/health`, { cache: "no-store" }),
@@ -127,6 +136,9 @@ async function fetchPublicStats(): Promise<PublicStats> {
 
     const statsJson = await statsRes.json();
     const healthJson = await healthRes.json();
+
+    console.log("[Landing] statsJson =", statsJson);
+    console.log("[Landing] healthJson =", healthJson);
 
     return {
       total: statsJson?.data?.total ?? 0,

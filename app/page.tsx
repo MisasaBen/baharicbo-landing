@@ -50,74 +50,126 @@ import {
  * - Adds simple “dashboard-ish” preview (site selector, status pills, trend placeholder)
  */
 
-type Metrics = {
-  temperatureC: number;
-  ph: number;
-  salinityPpt: number;
-  turbidityNtu: number;
+// type Metrics = {
+//   temperatureC: number;
+//   ph: number;
+//   salinityPpt: number;
+//   turbidityNtu: number;
+//   lastUpdated: string;
+//   apiMode: "Mock" | "Live";
+//   site: string;
+// };
+
+// const MOCK_SITES = [
+//   { id: "imta-cage-1", label: "IMTA Cage 1" },
+//   { id: "imta-cage-2", label: "IMTA Cage 2" },
+//   { id: "seaweed-line-a", label: "Seaweed Line A" },
+// ];
+
+// function formatTemp(c: number) {
+//   return `${c.toFixed(1)}°C`;
+// }
+
+// function getTempStatus(c: number) {
+//   // Dummy thresholds; adjust later with real agronomic guidance.
+//   if (c < 24 || c > 31) return { label: "Attention", tone: "warning" as const };
+//   return { label: "Normal", tone: "ok" as const };
+// }
+
+// function getPhStatus(ph: number) {
+//   if (ph < 7.2 || ph > 8.6) return { label: "Attention", tone: "warning" as const };
+//   return { label: "Normal", tone: "ok" as const };
+// }
+
+// function getTurbidityStatus(ntu: number) {
+//   if (ntu > 10) return { label: "Attention", tone: "warning" as const };
+//   return { label: "Normal", tone: "ok" as const };
+// }
+
+// function getSalinityStatus(ppt: number) {
+//   if (ppt < 28 || ppt > 38) return { label: "Attention", tone: "warning" as const };
+//   return { label: "Normal", tone: "ok" as const };
+// }
+
+// // Later: swap this for a real API call to Wireless Planet / your backend.
+// async function fetchMetrics(siteId: string): Promise<Omit<Metrics, "lastUpdated">> {
+//   // Mock values that vary slightly by site:
+//   const base = siteId === "imta-cage-2" ? 0.6 : siteId === "seaweed-line-a" ? -0.4 : 0;
+//   return {
+//     temperatureC: 27.4 + base,
+//     ph: 7.9 + base * 0.05,
+//     salinityPpt: 33 + base * 0.4,
+//     turbidityNtu: 4 + Math.abs(base) * 0.6,
+//     apiMode: "Mock",
+//     site: siteId,
+//   };
+// }
+
+type PublicStats = {
+  total: number;
+  online: number;
+  warning: number;
+  offline: number;
   lastUpdated: string;
   apiMode: "Mock" | "Live";
-  site: string;
 };
 
-const MOCK_SITES = [
-  { id: "imta-cage-1", label: "IMTA Cage 1" },
-  { id: "imta-cage-2", label: "IMTA Cage 2" },
-  { id: "seaweed-line-a", label: "Seaweed Line A" },
-];
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  "https://bahari-cbo-web-api.onrender.com/api";
 
-function formatTemp(c: number) {
-  return `${c.toFixed(1)}°C`;
-}
+async function fetchPublicStats(): Promise<PublicStats> {
+  try {
+    const [statsRes, healthRes] = await Promise.all([
+      fetch(`${API_BASE}/readings/public-stats`, { cache: "no-store" }),
+      fetch(`${API_BASE}/health`, { cache: "no-store" }),
+    ]);
 
-function getTempStatus(c: number) {
-  // Dummy thresholds; adjust later with real agronomic guidance.
-  if (c < 24 || c > 31) return { label: "Attention", tone: "warning" as const };
-  return { label: "Normal", tone: "ok" as const };
-}
+    const statsJson = await statsRes.json();
+    const healthJson = await healthRes.json();
 
-function getPhStatus(ph: number) {
-  if (ph < 7.2 || ph > 8.6) return { label: "Attention", tone: "warning" as const };
-  return { label: "Normal", tone: "ok" as const };
-}
-
-function getTurbidityStatus(ntu: number) {
-  if (ntu > 10) return { label: "Attention", tone: "warning" as const };
-  return { label: "Normal", tone: "ok" as const };
-}
-
-function getSalinityStatus(ppt: number) {
-  if (ppt < 28 || ppt > 38) return { label: "Attention", tone: "warning" as const };
-  return { label: "Normal", tone: "ok" as const };
-}
-
-// Later: swap this for a real API call to Wireless Planet / your backend.
-async function fetchMetrics(siteId: string): Promise<Omit<Metrics, "lastUpdated">> {
-  // Mock values that vary slightly by site:
-  const base = siteId === "imta-cage-2" ? 0.6 : siteId === "seaweed-line-a" ? -0.4 : 0;
-  return {
-    temperatureC: 27.4 + base,
-    ph: 7.9 + base * 0.05,
-    salinityPpt: 33 + base * 0.4,
-    turbidityNtu: 4 + Math.abs(base) * 0.6,
-    apiMode: "Mock",
-    site: siteId,
-  };
+    return {
+      total: statsJson?.data?.total ?? 0,
+      online: statsJson?.data?.online ?? 0,
+      warning: statsJson?.data?.warning ?? 0,
+      offline: statsJson?.data?.offline ?? 0,
+      lastUpdated: "Just now",
+      apiMode: healthJson?.success ? "Live" : "Mock",
+    };
+  } catch {
+    return {
+      total: 0,
+      online: 0,
+      warning: 0,
+      offline: 0,
+      lastUpdated: "Unavailable",
+      apiMode: "Mock",
+    };
+  }
 }
 
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [selectedSite, setSelectedSite] = useState(MOCK_SITES[0].id);
+  // const [selectedSite, setSelectedSite] = useState(MOCK_SITES[0].id);
 
-  const [data, setData] = useState<Metrics>({
-    temperatureC: 27.4,
-    ph: 7.9,
-    salinityPpt: 33,
-    turbidityNtu: 4,
-    lastUpdated: "Just now",
-    apiMode: "Mock",
-    site: MOCK_SITES[0].id,
-  });
+  // const [data, setData] = useState<Metrics>({
+  //   temperatureC: 27.4,
+  //   ph: 7.9,
+  //   salinityPpt: 33,
+  //   turbidityNtu: 4,
+  //   lastUpdated: "Just now",
+  //   apiMode: "Mock",
+  //   site: MOCK_SITES[0].id,
+  // });
+
+  const [stats, setStats] = useState<PublicStats>({
+  total: 0,
+  online: 0,
+  warning: 0,
+  offline: 0,
+  lastUpdated: "Loading...",
+  apiMode: "Mock",
+});
 
   // Prevent background scrolling when mobile nav is open
   useEffect(() => {
@@ -130,40 +182,59 @@ export default function LandingPage() {
   }, [mobileOpen]);
 
   // Refresh mock data periodically (placeholder for real polling)
+  // useEffect(() => {
+  //   let isMounted = true;
+
+  //   const load = async () => {
+  //     const m = await fetchMetrics(selectedSite);
+  //     if (!isMounted) return;
+  //     setData({
+  //       ...m,
+  //       lastUpdated: "Just now",
+  //     });
+  //   };
+
+  //   load();
+
+  //   const interval = setInterval(async () => {
+  //     const m = await fetchMetrics(selectedSite);
+  //     if (!isMounted) return;
+  //     setData((prev) => ({
+  //       ...prev,
+  //       ...m,
+  //       lastUpdated: "Just now",
+  //     }));
+  //   }, 300000); // 5 mins (change later)
+
+  //   return () => {
+  //     isMounted = false;
+  //     clearInterval(interval);
+  //   };
+  // }, [selectedSite]);
+
   useEffect(() => {
-    let isMounted = true;
+  let isMounted = true;
 
-    const load = async () => {
-      const m = await fetchMetrics(selectedSite);
-      if (!isMounted) return;
-      setData({
-        ...m,
-        lastUpdated: "Just now",
-      });
-    };
+  const load = async () => {
+    const result = await fetchPublicStats();
+    if (!isMounted) return;
+    setStats(result);
+  };
 
-    load();
+  load();
 
-    const interval = setInterval(async () => {
-      const m = await fetchMetrics(selectedSite);
-      if (!isMounted) return;
-      setData((prev) => ({
-        ...prev,
-        ...m,
-        lastUpdated: "Just now",
-      }));
-    }, 300000); // 5 mins (change later)
+  const interval = setInterval(load, 60000);
 
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, [selectedSite]);
+  return () => {
+    isMounted = false;
+    clearInterval(interval);
+  };
+}, []);
 
-  const tempStatus = useMemo(() => getTempStatus(data.temperatureC), [data.temperatureC]);
-  const phStatus = useMemo(() => getPhStatus(data.ph), [data.ph]);
-  const salStatus = useMemo(() => getSalinityStatus(data.salinityPpt), [data.salinityPpt]);
-  const turbStatus = useMemo(() => getTurbidityStatus(data.turbidityNtu), [data.turbidityNtu]);
+  // const tempStatus = useMemo(() => getTempStatus(data.temperatureC), [data.temperatureC]);
+  // const phStatus = useMemo(() => getPhStatus(data.ph), [data.ph]);
+  // const salStatus = useMemo(() => getSalinityStatus(data.salinityPpt), [data.salinityPpt]);
+  // const turbStatus = useMemo(() => getTurbidityStatus(data.turbidityNtu), [data.turbidityNtu]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white text-gray-800">
@@ -430,126 +501,134 @@ export default function LandingPage() {
 
         {/* Farmer’s Link (dashboard teaser) */}
         <section id="farmers-link" className="py-18 md:py-20 px-6 bg-white">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-              <div>
-                <h2 className="text-3xl font-bold text-blue-900">Farmer’s Link</h2>
-                <p className="mt-3 text-gray-600 max-w-2xl">
-                  A simple, secure dashboard for farmers and project teams. For now, this is a preview using mock data —
-                  built to plug into the live IoT system after approval.
-                </p>
+  <div className="max-w-6xl mx-auto">
+    <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+      <div>
+        <h2 className="text-3xl font-bold text-blue-900">Farmer’s Link</h2>
+        <p className="mt-3 text-gray-600 max-w-2xl">
+          A simple, secure dashboard for farmers and project teams. This public preview now uses live backend monitoring summary data, while detailed role-based tools remain inside the protected platform.
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Pill
+          tone={stats.apiMode === "Live" ? "ok" : "warning"}
+          icon={<BarChart3 size={14} />}
+          text={`API: ${stats.apiMode}`}
+        />
+        <Pill tone="muted" icon={<Lock size={14} />} text="Role-based access" />
+        <LoginDialogTrigger />
+      </div>
+    </div>
+
+    <div className="mt-10 grid lg:grid-cols-3 gap-6">
+      <Card className="rounded-3xl shadow-lg">
+        <CardContent className="p-6 space-y-6">
+          <div className="space-y-2">
+            <div className="text-sm font-semibold text-gray-700">Network overview</div>
+            <div className="text-xs text-gray-500">Last updated: {stats.lastUpdated}</div>
+          </div>
+
+          <div className="rounded-2xl border bg-blue-50 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="inline-flex items-center gap-2 font-semibold text-blue-900">
+                <Bell size={16} />
+                Public alert status
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <Pill
-                  tone={data.apiMode === "Live" ? "ok" : "muted"}
-                  icon={<BarChart3 size={14} />}
-                  text={`API: ${data.apiMode}`}
-                />
-                <Pill tone="muted" icon={<Lock size={14} />} text="Role-based access" />
-                <LoginDialogTrigger />
-              </div>
+              <span className="text-xs text-gray-600">Live</span>
             </div>
 
-            <div className="mt-10 grid lg:grid-cols-3 gap-6">
-              {/* Left: selector + alerts preview */}
-              <Card className="rounded-3xl shadow-lg">
-                <CardContent className="p-6 space-y-6">
-                  <div className="space-y-2">
-                    <div className="text-sm font-semibold text-gray-700">Monitoring site</div>
-                    <Select value={selectedSite} onValueChange={setSelectedSite}>
-                      <SelectTrigger className="rounded-2xl">
-                        <SelectValue placeholder="Select site" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {MOCK_SITES.map((s) => (
-                          <SelectItem key={s.id} value={s.id}>
-                            {s.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="text-xs text-gray-500">Last updated: {data.lastUpdated}</div>
-                  </div>
+            <div className="text-sm text-gray-700">
+              {stats.warning > 0
+                ? `${stats.warning} monitoring point(s) are currently in a warning state.`
+                : "No active public warning conditions right now."}
+            </div>
 
-                  <div className="rounded-2xl border bg-blue-50 p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="inline-flex items-center gap-2 font-semibold text-blue-900">
-                        <Bell size={16} />
-                        Alerts
-                      </div>
-                      <span className="text-xs text-gray-600">Preview</span>
-                    </div>
-
-                    <div className="text-sm text-gray-700">
-                      No active alerts (mock).
-                    </div>
-
-                    <div className="text-xs text-gray-500">
-                      Phase 2: thresholds + SMS/WhatsApp alerts.
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border p-4 space-y-2">
-                    <div className="text-sm font-semibold text-gray-700">User roles</div>
-                    <div className="flex flex-wrap gap-2">
-                      <Pill tone="muted" text="Farmers" />
-                      <Pill tone="muted" text="Technical Staff" />
-                      <Pill tone="muted" text="Admin" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Middle: metrics */}
-              <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
-                <MetricCard
-                  icon={<Thermometer size={28} />}
-                  label="Temperature"
-                  value={formatTemp(data.temperatureC)}
-                  status={tempStatus}
-                  hint="Key for fish & seaweed decisions"
-                />
-                <MetricCard
-                  icon={<Droplets size={28} />}
-                  label="pH"
-                  value={data.ph.toFixed(2)}
-                  status={phStatus}
-                  hint="Water balance indicator"
-                />
-                <MetricCard
-                  icon={<Waves size={28} />}
-                  label="Salinity"
-                  value={`${data.salinityPpt.toFixed(1)} ppt`}
-                  status={salStatus}
-                  hint="Tracks salt concentration"
-                />
-                <MetricCard
-                  icon={<Activity size={28} />}
-                  label="Turbidity"
-                  value={`${data.turbidityNtu.toFixed(1)} NTU`}
-                  status={turbStatus}
-                  hint="Water clarity indicator"
-                />
-
-                <Card className="md:col-span-2 rounded-3xl shadow-lg">
-                  <CardContent className="p-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="inline-flex items-center gap-2 font-semibold text-blue-900">
-                        <BarChart3 size={18} />
-                        Weekly trend (preview)
-                      </div>
-                      <span className="text-xs text-gray-500">Placeholder chart</span>
-                    </div>
-                    <TrendPlaceholder />
-                    <div className="text-xs text-gray-500">
-                      Phase 2: real charts from IoT records + exportable reports.
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+            <div className="text-xs text-gray-500">
+              This section uses public monitoring summary data from the hosted backend.
             </div>
           </div>
-        </section>
+
+          <div className="rounded-2xl border p-4 space-y-2">
+            <div className="text-sm font-semibold text-gray-700">Available public data</div>
+            <div className="flex flex-wrap gap-2">
+              <Pill tone="muted" text="Stations" />
+              <Pill tone="muted" text="Online status" />
+              <Pill tone="muted" text="Warnings" />
+              <Pill tone="muted" text="System availability" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="lg:col-span-2 grid md:grid-cols-2 gap-6">
+        <MetricCard
+          icon={<BarChart3 size={28} />}
+          label="Monitoring Stations"
+          value={String(stats.total)}
+          status={{ label: "Live", tone: "ok" }}
+          hint="Registered public monitoring points"
+        />
+        <MetricCard
+          icon={<Waves size={28} />}
+          label="Online"
+          value={String(stats.online)}
+          status={{ label: "Live", tone: "ok" }}
+          hint="Devices recently reporting"
+        />
+        <MetricCard
+          icon={<Bell size={28} />}
+          label="Warnings"
+          value={String(stats.warning)}
+          status={{
+            label: stats.warning > 0 ? "Attention" : "Normal",
+            tone: stats.warning > 0 ? "warning" : "ok",
+          }}
+          hint="Monitoring points outside safe range"
+        />
+        <MetricCard
+          icon={<Activity size={28} />}
+          label="Offline"
+          value={String(stats.offline)}
+          status={{
+            label: stats.offline > 0 ? "Attention" : "ok",
+            tone: stats.offline > 0 ? "warning" : "ok",
+          }}
+          hint="Devices not recently reporting"
+        />
+
+        <Card className="md:col-span-2 rounded-3xl shadow-lg">
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="inline-flex items-center gap-2 font-semibold text-blue-900">
+                <BarChart3 size={18} />
+                Live backend connection
+              </div>
+              <span className="text-xs text-gray-500">Public API</span>
+            </div>
+
+            <div className="rounded-2xl border bg-white p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">API mode</span>
+                <Pill
+                  tone={stats.apiMode === "Live" ? "ok" : "warning"}
+                  text={stats.apiMode}
+                />
+              </div>
+
+              <div className="mt-4 text-sm text-gray-600">
+                This public landing section now uses live backend summary data instead of mock site readings.
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-500">
+              Detailed site records, role-based dashboards, and additional environmental metrics will be expanded inside the protected applications.
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  </div>
+</section>
 
         {/* How it works */}
         <section className="py-18 md:py-20 px-6 bg-gradient-to-b from-blue-50 to-white">

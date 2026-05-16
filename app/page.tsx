@@ -168,7 +168,7 @@ export default function LandingPage() {
   warning: 0,
   offline: 0,
   lastUpdated: "Loading...",
-  apiMode: "Mock",
+  apiMode: "Live",
 });
 
   // Prevent background scrolling when mobile nav is open

@@ -33,12 +33,12 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Bahari CBO Network" }],
   creator: "Bahari CBO Network",
-  metadataBase: new URL("https://yourdomain.com"), // Replace after domain purchase
+  metadataBase: new URL("https://baharicbo.com"),
   openGraph: {
     title: "Bahari CBO Network | Blue Empowerment Project",
     description:
       "Community-owned environmental monitoring and climate-smart aquaculture solutions for coastal communities in Kenya.",
-    url: "https://yourdomain.com", // Replace later
+    url: "https://baharicbo.com",
     siteName: "Bahari CBO Network",
     locale: "en_KE",
     type: "website",
